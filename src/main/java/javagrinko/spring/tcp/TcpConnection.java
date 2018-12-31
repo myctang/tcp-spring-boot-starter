@@ -1,5 +1,8 @@
 package javagrinko.spring.tcp;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.OutputStream;
@@ -13,6 +16,7 @@ public class TcpConnection implements Connection {
     private OutputStream outputStream;
     private Socket socket;
     private List<Listener> listeners = new ArrayList<>();
+    private static Log logger = LogFactory.getLog(TcpConnection.class);
 
     public TcpConnection(Socket socket) {
         this.socket = socket;
@@ -50,7 +54,6 @@ public class TcpConnection implements Connection {
     public void start() {
         new Thread(() -> {
             while (true) {
-                byte buf[] = new byte[64 * 1024];
                 try {
                     Object obj = inputStream.readObject();
                     if (obj != null) {
@@ -71,7 +74,7 @@ public class TcpConnection implements Connection {
                     }
                     break;
                 } catch (ClassNotFoundException e) {
-                    System.out.println(e.getMessage());
+                    logger.error(e.getMessage());
                 }
             }
         }).start();
