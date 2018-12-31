@@ -1,16 +1,15 @@
 package javagrinko.spring.tcp;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class TcpConnection implements Connection {
-    private InputStream inputStream;
+    private ObjectInputStream inputStream;
     private OutputStream outputStream;
     private Socket socket;
     private List<Listener> listeners = new ArrayList<>();
@@ -18,7 +17,7 @@ public class TcpConnection implements Connection {
     public TcpConnection(Socket socket) {
         this.socket = socket;
         try {
-            inputStream = socket.getInputStream();
+            inputStream = new ObjectInputStream(socket.getInputStream());
             outputStream = socket.getOutputStream();
         } catch (IOException e) {
             e.printStackTrace();
@@ -53,11 +52,10 @@ public class TcpConnection implements Connection {
             while (true) {
                 byte buf[] = new byte[64 * 1024];
                 try {
-                    int count = inputStream.read(buf);
-                    if (count > 0) {
-                        byte[] bytes = Arrays.copyOf(buf, count);
+                    Object obj = inputStream.readObject();
+                    if (obj != null) {
                         for (Listener listener : listeners) {
-                            listener.messageReceived(this, bytes);
+                            listener.messageReceived(this, obj);
                         }
                     } else {
                         socket.close();
@@ -72,6 +70,8 @@ public class TcpConnection implements Connection {
                         listener.disconnected(this);
                     }
                     break;
+                } catch (ClassNotFoundException e) {
+                    System.out.println(e.getMessage());
                 }
             }
         }).start();
