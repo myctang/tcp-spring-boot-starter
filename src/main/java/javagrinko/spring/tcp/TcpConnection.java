@@ -5,7 +5,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.OutputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ import java.util.List;
 
 public class TcpConnection implements Connection {
     private ObjectInputStream inputStream;
-    private OutputStream outputStream;
+    private ObjectOutputStream outputStream;
     private Socket socket;
     private List<Listener> listeners = new ArrayList<>();
     private static Log logger = LogFactory.getLog(TcpConnection.class);
@@ -21,8 +21,8 @@ public class TcpConnection implements Connection {
     public TcpConnection(Socket socket) {
         this.socket = socket;
         try {
+            outputStream = new ObjectOutputStream(socket.getOutputStream());
             inputStream = new ObjectInputStream(socket.getInputStream());
-            outputStream = socket.getOutputStream();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -35,13 +35,10 @@ public class TcpConnection implements Connection {
 
     @Override
     public void send(Object objectToSend) {
-        if (objectToSend instanceof byte[]) {
-            byte[] data = (byte[]) objectToSend;
-            try {
-                outputStream.write(data);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            outputStream.writeObject(objectToSend);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
