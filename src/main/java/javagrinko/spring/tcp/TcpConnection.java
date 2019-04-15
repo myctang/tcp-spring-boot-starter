@@ -52,12 +52,14 @@ public class TcpConnection implements Connection {
         new Thread(() -> {
             while (true) {
                 try {
+                    logger.info("Started to read objects");
                     Object obj = inputStream.readObject();
                     if (obj != null) {
                         for (Listener listener : listeners) {
                             listener.messageReceived(this, obj);
                         }
                     } else {
+                        logger.info("Obj was null, close the socket");
                         socket.close();
                         for (Listener listener : listeners) {
                             listener.disconnected(this);
@@ -65,13 +67,14 @@ public class TcpConnection implements Connection {
                         break;
                     }
                 } catch (IOException e) {
+                    logger.error("IOException: " + e.getMessage());
                     e.printStackTrace();
                     for (Listener listener : listeners) {
                         listener.disconnected(this);
                     }
                     break;
                 } catch (ClassNotFoundException e) {
-                    logger.error(e.getMessage());
+                    logger.error("Class not found " + e.getMessage());
                 }
             }
         }).start();
