@@ -77,6 +77,8 @@ public class TcpConnection implements Connection {
                     logger.error("Class not found " + e.getMessage());
                 } catch (Exception e) {
                     logger.error("Error while reading" + e.getMessage());
+                    close();
+                    break;
                 }
             }
         }).start();
